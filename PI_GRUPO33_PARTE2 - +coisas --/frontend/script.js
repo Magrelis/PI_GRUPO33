@@ -38,11 +38,56 @@ function renderTask(task) {
         }
 
         taskElement.appendChild(deleteBtn);
+
+        const commentsDiv = document.createElement("div");
+        commentsDiv.className = "comments";
+        if (task.comments && task.comments.length > 0) {
+            task.comments.forEach(comment => {
+                const commentP = document.createElement("p");
+                commentP.textContent = "💬 " + comment;
+                commentsDiv.appendChild(commentP);
+            });
+        }
+        taskElement.appendChild(commentsDiv);
+
+        const commentForm = document.createElement("form");
+        commentForm.className = "comment-form";
+        commentForm.innerHTML = `
+            <input type="text" placeholder="Comentar..." class="comment-input" required>
+            <button type="submit">Enviar</button>
+        `;
+        commentForm.addEventListener("submit", (e) => {
+            e.preventDefault();
+            const input = commentForm.querySelector(".comment-input");
+            const comment = input.value.trim();
+            if (comment) {
+                socket.emit("add_comment", {
+                    taskId: task.id,
+                    comment: comment
+                });
+                input.value = "";
+            }
+        });
+        taskElement.appendChild(commentForm);
+
         column.appendChild(taskElement);
     }
 }
 
 // Eventos do Socket.IO
+
+socket.on("comment_added", ({ taskId, comment }) => {
+    const taskElement = document.querySelector(`[data-task-id="${taskId}"]`);
+    if (taskElement) {
+        const commentsDiv = taskElement.querySelector(".comments");
+        if (commentsDiv) {
+            const commentP = document.createElement("p");
+            commentP.textContent = "💬 " + comment;
+            commentsDiv.appendChild(commentP);
+        }
+    }
+});
+
 socket.on("task_created", (newTask) => renderTask(newTask));
 
 socket.on("tasks_updated", (allTasks) => {

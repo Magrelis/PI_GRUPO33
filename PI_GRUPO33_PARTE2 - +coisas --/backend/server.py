@@ -9,6 +9,15 @@ app = socketio.WSGIApp(sio)
 SLACK_WEBHOOK_URL = "https://hooks.slack.com/services/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"
 tasks = []
 
+@sio.event
+def add_comment(sid, data):
+    task_id = data["taskId"]
+    comment = data["comment"]
+    task = next((t for t in tasks if t["id"] == task_id), None)
+    if task:
+        task.setdefault("comments", []).append(comment)
+        sio.emit("comment_added", {"taskId": task_id, "comment": comment})
+
 def notify_slack(message):
     try:
         requests.post(SLACK_WEBHOOK_URL, json={"text": message})
@@ -23,6 +32,7 @@ def connect(sid, environ):
 @sio.event
 def create_task(sid, task_data):
     new_task = {
+        "comments": [],
         "id": len(tasks) + 1,
         "title": task_data["title"],
         "status": "todo",
