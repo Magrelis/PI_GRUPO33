@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>TaskFlow</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+</head>
+<body>
+    <h1>TaskFlow</h1>
+    <button id="startZoom">Iniciar Reunião Zoom</button> <!-- Novo botão Zoom -->
+    
+   <div class="kanban">
+    <!-- Colunas existentes -->
+    <div class="column" id="todo">
+        <h2>To Do</h2>
+        <div class="task-list"></div>
+    </div>
+    <div class="column" id="doing">
+        <h2>Doing</h2>
+        <div class="task-list"></div>
+    </div>
+
+    <!-- Novas colunas -->
+    <div class="column" id="finished">
+        <h2>Finished ✅</h2>
+        <div class="task-list"></div>
+    </div>
+    <div class="column" id="canceled">
+        <h2>Canceled ❌</h2>
+        <div class="task-list"></div>
+    </div>
+</div>
+    
+    <div class="task-form">
+        <input type="text" id="taskInput" placeholder="Nova tarefa...">
+        <input type="text" id="driveLink" placeholder="Link do Google Drive (opcional)"> <!-- Novo campo -->
+        <button id="createTask">Adicionar</button>
+    </div>
+    
+    <script src="script.js"></script>
+</body>
+</html>
