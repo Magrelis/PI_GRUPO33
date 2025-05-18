@@ -18,12 +18,6 @@ def add_comment(sid, data):
         task.setdefault("comments", []).append(comment)
         sio.emit("comment_added", {"taskId": task_id, "comment": comment})
 
-def notify_slack(message):
-    try:
-        requests.post(SLACK_WEBHOOK_URL, json={"text": message})
-    except Exception as e:
-        print(f"Erro no Slack: {e}")
-
 @sio.event
 def connect(sid, environ):
     print(f"Cliente conectado: {sid}")
@@ -43,19 +37,25 @@ def create_task(sid, task_data):
     notify_slack(f"✅ Nova tarefa: {new_task['title']}")  # Notificação no Slack
 
 @sio.event
-def update_task_status(sid, data):
-    task = next((t for t in tasks if t["id"] == data["taskId"]), None)
-    if task:
-        task["status"] = data["newStatus"]
-        sio.emit("task_updated", task)
-
-@sio.event
 def delete_task(sid, task_id):
     global tasks
     task_index = next((i for i, t in enumerate(tasks) if t["id"] == task_id), None)
     if task_index is not None:
         deleted_task = tasks.pop(task_index)
         sio.emit("task_deleted", deleted_task)
+
+def notify_slack(message):
+    try:
+        requests.post(SLACK_WEBHOOK_URL, json={"text": message})
+    except Exception as e:
+        print(f"Erro no Slack: {e}")
+
+@sio.event
+def update_task_status(sid, data):
+    task = next((t for t in tasks if t["id"] == data["taskId"]), None)
+    if task:
+        task["status"] = data["newStatus"]
+        sio.emit("task_updated", task)
 
 if __name__ == "__main__":
     eventlet.wsgi.server(eventlet.listen(('localhost', 8000)), app)
