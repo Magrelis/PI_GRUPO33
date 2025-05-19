@@ -1,7 +1,7 @@
 const socket = io("http://localhost:8000");
-const taskInput = document.getElementById("taskInput");
-const driveLink = document.getElementById("driveLink");
 const createTaskBtn = document.getElementById("createTask");
+const driveLink = document.getElementById("driveLink");
+const taskInput = document.getElementById("taskInput");
 
 // Zoom (simulação)
 document.getElementById("startZoom").addEventListener("click", () => {
@@ -95,68 +95,6 @@ function renderTask(task) {
     }
 }
 
-// Eventos do Socket.IO
-
-socket.on("comment_added", ({ taskId, comment }) => {
-    const taskElement = document.querySelector(`[data-task-id="${taskId}"]`);
-    if (taskElement) {
-        const commentsDiv = taskElement.querySelector(".comments");
-        if (commentsDiv) {
-            const commentDiv = document.createElement("div");
-            commentDiv.className = "comment-item";
-
-            const commentP = document.createElement("p");
-            commentP.textContent = "💬 " + comment;
-
-            const deleteCommentBtn = document.createElement("button");
-            deleteCommentBtn.textContent = "×";
-            deleteCommentBtn.className = "comment-delete-btn";
-            deleteCommentBtn.addEventListener("click", (e) => {
-                e.stopPropagation();
-                socket.emit("delete_comment", { taskId, commentIndex: Array.from(commentsDiv.children).indexOf(commentDiv) });
-            });
-    
-            commentDiv.appendChild(commentP);
-            commentDiv.appendChild(deleteCommentBtn);
-
-            commentsDiv.appendChild(commentDiv);
-        }
-    }
-});
-
-socket.on("comment_deleted", ({ taskId, commentIndex }) => {
-    const taskElement = document.querySelector(`[data-task-id="${taskId}"]`);
-    if (taskElement) {
-        const commentsDiv = taskElement.querySelector(".comments");
-        if (commentsDiv) {
-            const commentItems = commentsDiv.querySelectorAll(".comment-item");
-            if (commentItems[commentIndex]) {
-                commentItems[commentIndex].remove();
-            }
-        }
-    }
-});
-
-socket.on("task_created", (newTask) => renderTask(newTask));
-
-socket.on("tasks_updated", (allTasks) => {
-    document.querySelectorAll(".task-list").forEach(el => el.innerHTML = "");
-    allTasks.forEach(renderTask);
-});
-
-socket.on("task_updated", (updatedTask) => {
-    const taskElement = document.querySelector(`[data-task-id="${updatedTask.id}"]`);
-    if (taskElement) {
-        const newColumn = document.querySelector(`#${updatedTask.status} .task-list`);
-        newColumn.appendChild(taskElement);
-    }
-});
-
-socket.on("task_deleted", (deletedTask) => {
-    const taskElement = document.querySelector(`[data-task-id="${deletedTask.id}"]`);
-    if (taskElement) taskElement.remove();
-});
-
 // Criar tarefa
 createTaskBtn.addEventListener("click", () => {
     const title = taskInput.value.trim();
@@ -189,4 +127,65 @@ document.querySelectorAll(".column").forEach(column => {
         const newStatus = column.id;
         socket.emit("update_task_status", { taskId: parseInt(taskId), newStatus });
     });
+});
+
+// Eventos do Socket.IO
+socket.on("comment_added", ({ taskId, comment }) => {
+    const taskElement = document.querySelector(`[data-task-id="${taskId}"]`);
+    if (taskElement) {
+        const commentsDiv = taskElement.querySelector(".comments");
+        if (commentsDiv) {
+            const commentDiv = document.createElement("div");
+            commentDiv.className = "comment-item";
+
+            const commentP = document.createElement("p");
+            commentP.textContent = "💬 " + comment;
+
+            const deleteCommentBtn = document.createElement("button");
+            deleteCommentBtn.textContent = "×";
+            deleteCommentBtn.className = "comment-delete-btn";
+            deleteCommentBtn.addEventListener("click", (e) => {
+                e.stopPropagation();
+                socket.emit("delete_comment", { taskId, commentIndex: Array.from(commentsDiv.children).indexOf(commentDiv) });
+            });
+
+            commentDiv.appendChild(commentP);
+            commentDiv.appendChild(deleteCommentBtn);
+
+            commentsDiv.appendChild(commentDiv);
+        }
+    }
+});
+
+socket.on("comment_deleted", ({ taskId, commentIndex }) => {
+    const taskElement = document.querySelector(`[data-task-id="${taskId}"]`);
+    if (taskElement) {
+        const commentsDiv = taskElement.querySelector(".comments");
+        if (commentsDiv) {
+            const commentItems = commentsDiv.querySelectorAll(".comment-item");
+            if (commentItems[commentIndex]) {
+                commentItems[commentIndex].remove();
+            }
+        }
+    }
+});
+
+socket.on("task_created", (newTask) => renderTask(newTask));
+
+socket.on("task_deleted", (deletedTask) => {
+    const taskElement = document.querySelector(`[data-task-id="${deletedTask.id}"]`);
+    if (taskElement) taskElement.remove();
+});
+
+socket.on("task_updated", (updatedTask) => {
+    const taskElement = document.querySelector(`[data-task-id="${updatedTask.id}"]`);
+    if (taskElement) {
+        const newColumn = document.querySelector(`#${updatedTask.status} .task-list`);
+        newColumn.appendChild(taskElement);
+    }
+});
+
+socket.on("tasks_updated", (allTasks) => {
+    document.querySelectorAll(".task-list").forEach(el => el.innerHTML = "");
+    allTasks.forEach(renderTask);
 });
