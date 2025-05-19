@@ -9,11 +9,14 @@ app = socketio.WSGIApp(sio)
 SLACK_WEBHOOK_URL = "https://hooks.slack.com/services/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"
 tasks = []
 
-def notify_slack(message):
-    try:
-        requests.post(SLACK_WEBHOOK_URL, json={"text": message})
-    except Exception as e:
-        print(f"Erro no Slack: {e}")
+@sio.event
+def add_comment(sid, data):
+    task_id = data["taskId"]
+    comment = data["comment"]
+    task = next((t for t in tasks if t["id"] == task_id), None)
+    if task:
+        task.setdefault("comments", []).append(comment)
+        sio.emit("comment_added", {"taskId": task_id, "comment": comment})
 
 @sio.event
 def connect(sid, environ):
@@ -23,6 +26,7 @@ def connect(sid, environ):
 @sio.event
 def create_task(sid, task_data):
     new_task = {
+        "comments": [],
         "id": len(tasks) + 1,
         "title": task_data["title"],
         "status": "todo",
@@ -33,11 +37,13 @@ def create_task(sid, task_data):
     notify_slack(f"✅ Nova tarefa: {new_task['title']}")  # Notificação no Slack
 
 @sio.event
-def update_task_status(sid, data):
-    task = next((t for t in tasks if t["id"] == data["taskId"]), None)
-    if task:
-        task["status"] = data["newStatus"]
-        sio.emit("task_updated", task)
+def delete_comment(sid, data):
+    task_id = data["taskId"]
+    comment_index = data["commentIndex"]
+    task = next((t for t in tasks if t["id"] == task_id), None)
+    if task and 0 <= comment_index < len(task.get("comments", [])):
+        deleted_comment = task["comments"].pop(comment_index)
+        sio.emit("comment_deleted", {"taskId": task_id, "commentIndex": comment_index})
 
 @sio.event
 def delete_task(sid, task_id):
@@ -46,6 +52,19 @@ def delete_task(sid, task_id):
     if task_index is not None:
         deleted_task = tasks.pop(task_index)
         sio.emit("task_deleted", deleted_task)
+
+def notify_slack(message):
+    try:
+        requests.post(SLACK_WEBHOOK_URL, json={"text": message})
+    except Exception as e:
+        print(f"Erro no Slack: {e}")
+
+@sio.event
+def update_task_status(sid, data):
+    task = next((t for t in tasks if t["id"] == data["taskId"]), None)
+    if task:
+        task["status"] = data["newStatus"]
+        sio.emit("task_updated", task)
 
 if __name__ == "__main__":
     eventlet.wsgi.server(eventlet.listen(('localhost', 8000)), app)

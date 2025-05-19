@@ -1,7 +1,7 @@
 const socket = io("http://localhost:8000");
-const taskInput = document.getElementById("taskInput");
-const driveLink = document.getElementById("driveLink");
 const createTaskBtn = document.getElementById("createTask");
+const driveLink = document.getElementById("driveLink");
+const taskInput = document.getElementById("taskInput");
 
 // Zoom (simulação)
 document.getElementById("startZoom").addEventListener("click", () => {
@@ -14,9 +14,15 @@ function renderTask(task) {
     if (column) {
         const taskElement = document.createElement("div");
         taskElement.className = "task";
-        taskElement.textContent = task.title;
         taskElement.draggable = true;
         taskElement.dataset.taskId = task.id;
+        taskElement.style.position = "relative";
+
+        taskElement.innerHTML = "";
+
+        const titleEl = document.createElement("p");
+        titleEl.textContent = task.title;
+        taskElement.appendChild(titleEl);
 
         // Botão de deletar
         const deleteBtn = document.createElement("button");
@@ -26,6 +32,7 @@ function renderTask(task) {
             e.stopPropagation();
             socket.emit("delete_task", task.id);
         });
+        taskElement.appendChild(deleteBtn);
 
         // Link do Google Drive
         if (task.drive_link) {
@@ -37,31 +44,56 @@ function renderTask(task) {
             taskElement.appendChild(driveLink);
         }
 
-        taskElement.appendChild(deleteBtn);
+        // Comentários
+        const commentsDiv = document.createElement("div");
+        commentsDiv.className = "comments";
+
+        if (task.comments && task.comments.length > 0) {
+            task.comments.forEach((comment, index) => {
+                const commentDiv = document.createElement("div");
+                commentDiv.className = "comment-item";
+
+                const commentP = document.createElement("p");
+                commentP.textContent = "💬 " + comment;
+
+                const deleteCommentBtn = document.createElement("button");
+                deleteCommentBtn.textContent = "×";
+                deleteCommentBtn.className = "comment-delete-btn";
+                deleteCommentBtn.addEventListener("click", (e) => {
+                    e.stopPropagation();
+                    socket.emit("delete_comment", { taskId: task.id, commentIndex: index });
+                });
+
+                commentDiv.appendChild(commentP);
+                commentDiv.appendChild(deleteCommentBtn);
+                commentsDiv.appendChild(commentDiv);
+            });
+        }
+        taskElement.appendChild(commentsDiv);
+
+        const commentForm = document.createElement("form");
+        commentForm.className = "comment-form";
+        commentForm.innerHTML = `
+            <input type="text" placeholder="Comentar..." class="comment-input" required>
+            <button type="submit">Enviar</button>
+        `;
+        commentForm.addEventListener("submit", (e) => {
+            e.preventDefault();
+            const input = commentForm.querySelector(".comment-input");
+            const comment = input.value.trim();
+            if (comment) {
+                socket.emit("add_comment", {
+                    taskId: task.id,
+                    comment: comment
+                });
+                input.value = "";
+            }
+        });
+        taskElement.appendChild(commentForm);
+
         column.appendChild(taskElement);
     }
 }
-
-// Eventos do Socket.IO
-socket.on("task_created", (newTask) => renderTask(newTask));
-
-socket.on("tasks_updated", (allTasks) => {
-    document.querySelectorAll(".task-list").forEach(el => el.innerHTML = "");
-    allTasks.forEach(renderTask);
-});
-
-socket.on("task_updated", (updatedTask) => {
-    const taskElement = document.querySelector(`[data-task-id="${updatedTask.id}"]`);
-    if (taskElement) {
-        const newColumn = document.querySelector(`#${updatedTask.status} .task-list`);
-        newColumn.appendChild(taskElement);
-    }
-});
-
-socket.on("task_deleted", (deletedTask) => {
-    const taskElement = document.querySelector(`[data-task-id="${deletedTask.id}"]`);
-    if (taskElement) taskElement.remove();
-});
 
 // Criar tarefa
 createTaskBtn.addEventListener("click", () => {
@@ -95,4 +127,65 @@ document.querySelectorAll(".column").forEach(column => {
         const newStatus = column.id;
         socket.emit("update_task_status", { taskId: parseInt(taskId), newStatus });
     });
+});
+
+// Eventos do Socket.IO
+socket.on("comment_added", ({ taskId, comment }) => {
+    const taskElement = document.querySelector(`[data-task-id="${taskId}"]`);
+    if (taskElement) {
+        const commentsDiv = taskElement.querySelector(".comments");
+        if (commentsDiv) {
+            const commentDiv = document.createElement("div");
+            commentDiv.className = "comment-item";
+
+            const commentP = document.createElement("p");
+            commentP.textContent = "💬 " + comment;
+
+            const deleteCommentBtn = document.createElement("button");
+            deleteCommentBtn.textContent = "×";
+            deleteCommentBtn.className = "comment-delete-btn";
+            deleteCommentBtn.addEventListener("click", (e) => {
+                e.stopPropagation();
+                socket.emit("delete_comment", { taskId, commentIndex: Array.from(commentsDiv.children).indexOf(commentDiv) });
+            });
+
+            commentDiv.appendChild(commentP);
+            commentDiv.appendChild(deleteCommentBtn);
+
+            commentsDiv.appendChild(commentDiv);
+        }
+    }
+});
+
+socket.on("comment_deleted", ({ taskId, commentIndex }) => {
+    const taskElement = document.querySelector(`[data-task-id="${taskId}"]`);
+    if (taskElement) {
+        const commentsDiv = taskElement.querySelector(".comments");
+        if (commentsDiv) {
+            const commentItems = commentsDiv.querySelectorAll(".comment-item");
+            if (commentItems[commentIndex]) {
+                commentItems[commentIndex].remove();
+            }
+        }
+    }
+});
+
+socket.on("task_created", (newTask) => renderTask(newTask));
+
+socket.on("task_deleted", (deletedTask) => {
+    const taskElement = document.querySelector(`[data-task-id="${deletedTask.id}"]`);
+    if (taskElement) taskElement.remove();
+});
+
+socket.on("task_updated", (updatedTask) => {
+    const taskElement = document.querySelector(`[data-task-id="${updatedTask.id}"]`);
+    if (taskElement) {
+        const newColumn = document.querySelector(`#${updatedTask.status} .task-list`);
+        newColumn.appendChild(taskElement);
+    }
+});
+
+socket.on("tasks_updated", (allTasks) => {
+    document.querySelectorAll(".task-list").forEach(el => el.innerHTML = "");
+    allTasks.forEach(renderTask);
 });
