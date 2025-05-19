@@ -151,6 +151,14 @@ button {
     position: relative;
 }
 
+.task .delete-btn {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    transform: none;
+    opacity: 1;
+}
+
 .task a {
     color: #1a73e8;
     font-size: 0.9em;
