@@ -5,70 +5,74 @@
 
 # TaskFlow 📝🚀
 
-**TaskFlow** is a task management app for remote teams. It helps teams organize, prioritize, and track their work easily on both mobile and web.
+**TaskFlow** é um aplicativo de gerenciamento de tasks para equipes remotas. Ele ajuda as equipes a organizar, priorizar e acompanhar o trabalho facilmente, tanto no mobile quanto na web.
 
 ---
 
-## 📌 Objective
+## 📌 Objetivo
 
-* Provide a simple and intuitive interface for task creation and assignment.
-* Enable integration with popular tools (such as Slack, Google Drive, and Zoom).
-* Offer real-time progress reports.
-* Ensure cross-platform accessibility (mobile and web).
+* Fornecer uma interface simples e intuitiva para criação e atribuição de tasks.  
+* Permitir integração com ferramentas populares (como Slack, Google Drive e Zoom).  
+* Oferecer relatórios de progresso em tempo real.  
+* Garantir acessibilidade multiplataforma (mobile e web).
 
 ---
 
-## 🛠️ Technologies Used
+## 🛠️ Tecnologias Utilizadas
 
-**Frontend:**
-- HTML5
-- CSS3
+**Frontend:**  
+- HTML5  
+- CSS3  
 - JavaScript (Vanilla)
 
-**Backend:**
-- Python 3.11
-- Socket.IO
+**Backend:**  
+- Python 3.11  
+- Socket.IO  
 - Eventlet
 
-**Integrations:**
-- **WebSocket** for real-time client-server communication  
-- **Slack Webhook** for task notifications
+**Integrações:**  
+- **WebSocket** para comunicação cliente-servidor em tempo real  
+- **Webhook do Slack** para notificações de tasks
 
 ---
 
-## ✅ Features Demonstrated
+## ✅ Funcionalidades Demonstradas
 
-- **Kanban interface** with four columns:  
-  `To Do`, `Doing`, `Finished ✅`, and `Canceled ❌`
+- **Interface Kanban** com quatro colunas:  
+  `To Do, Doing, Finished ✅, and Canceled ❌`
 
-- **Create Tasks**  
-  With fields for **title** and optional **Google Drive link**
+- **Criar Tasks**  
+  Com campos para **título** e link opcional do **Google Drive**
 
-- **Update Task Status**  
-  Drag and drop tasks between columns
+- **Atualizar Status da Task**  
+  Arrastar e soltar tasks entre as colunas
 
-- **Task Comments**  
-Add and remove comments on individual tasks to improve collaboration and context sharing
+- **Comentários nas Tasks**  
+  Adicionar e remover comentários em tasks individuais para melhorar a colaboração e o compartilhamento de contexto
 
-- **Real-Time Updates**  
-  Via WebSocket connection between client and server
+- **Atualizações em Tempo Real**  
+  Via conexão WebSocket entre cliente e servidor
 
-- **Slack Notifications**  
-  Automatic Slack messages when new tasks are created
+- **Notificações no Slack**  
+  Mensagens automáticas no Slack quando novas tasks são criadas
 
 ---
 
-## 🚀 How to Run
+## 🚀 Como Executar
 
-Follow these steps to run TaskFlow locally:
+Siga os passos abaixo para rodar o TaskFlow localmente:
+
+#### 1. Clone o repositório  
+
+Siga os passos abaixo para rodar o TaskFlow localmente::
 
 
-#### 1. Clone the repository
+#### 1. Clone o repositório
 ```
 gh repo clone Magrelis/PI_GRUPO33
 ```
 
-#### 2. Create and activate a virtual environment
+#### 2. Crie e ative um ambiente virtual
 ```
 cd PI_GRUPO33/taskflow
 
@@ -77,7 +81,7 @@ python3.11 -m venv venv
 source venv/bin/activate       # On Windows use: venv\Scripts\activate
 ```
 
-#### 3. Navigate to the backend folder and install backend dependencies
+#### 3. Navegue até a pasta do backend e instale as dependências
 ```
 cd backend 
 
@@ -98,7 +102,7 @@ xdg-open index.html       # Linux
 start index.html          # Windows
 ```
 
-## 👥 Contributors
+## 👥 Contribuidores
 
 - Caio Moreira Santos Oliveira  
 - Davi Anastacio Santos 
