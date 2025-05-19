@@ -74,8 +74,8 @@ function renderTask(task) {
         const commentForm = document.createElement("form");
         commentForm.className = "comment-form";
         commentForm.innerHTML = `
-            <input type="text" placeholder="Comentar..." class="comment-input" required>
-            <button type="submit">Enviar</button>
+            <input type="text" placeholder="Add a comment" class="comment-input" required>
+            <button type="submit">Post</button>
         `;
         commentForm.addEventListener("submit", (e) => {
             e.preventDefault();
