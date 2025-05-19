@@ -14,9 +14,15 @@ function renderTask(task) {
     if (column) {
         const taskElement = document.createElement("div");
         taskElement.className = "task";
-        taskElement.textContent = task.title;
         taskElement.draggable = true;
         taskElement.dataset.taskId = task.id;
+        taskElement.style.position = "relative";
+
+        taskElement.innerHTML = "";
+
+        const titleEl = document.createElement("p");
+        titleEl.textContent = task.title;
+        taskElement.appendChild(titleEl);
 
         // Botão de deletar
         const deleteBtn = document.createElement("button");
@@ -26,6 +32,7 @@ function renderTask(task) {
             e.stopPropagation();
             socket.emit("delete_task", task.id);
         });
+        taskElement.appendChild(deleteBtn);
 
         // Link do Google Drive
         if (task.drive_link) {
@@ -37,15 +44,29 @@ function renderTask(task) {
             taskElement.appendChild(driveLink);
         }
 
-        taskElement.appendChild(deleteBtn);
-
+        // Comentários
         const commentsDiv = document.createElement("div");
         commentsDiv.className = "comments";
+
         if (task.comments && task.comments.length > 0) {
-            task.comments.forEach(comment => {
+            task.comments.forEach((comment, index) => {
+                const commentDiv = document.createElement("div");
+                commentDiv.className = "comment-item";
+
                 const commentP = document.createElement("p");
                 commentP.textContent = "💬 " + comment;
-                commentsDiv.appendChild(commentP);
+
+                const deleteCommentBtn = document.createElement("button");
+                deleteCommentBtn.textContent = "×";
+                deleteCommentBtn.className = "comment-delete-btn";
+                deleteCommentBtn.addEventListener("click", (e) => {
+                    e.stopPropagation();
+                    socket.emit("delete_comment", { taskId: task.id, commentIndex: index });
+                });
+
+                commentDiv.appendChild(commentP);
+                commentDiv.appendChild(deleteCommentBtn);
+                commentsDiv.appendChild(commentDiv);
             });
         }
         taskElement.appendChild(commentsDiv);
@@ -81,9 +102,37 @@ socket.on("comment_added", ({ taskId, comment }) => {
     if (taskElement) {
         const commentsDiv = taskElement.querySelector(".comments");
         if (commentsDiv) {
+            const commentDiv = document.createElement("div");
+            commentDiv.className = "comment-item";
+
             const commentP = document.createElement("p");
             commentP.textContent = "💬 " + comment;
-            commentsDiv.appendChild(commentP);
+
+            const deleteCommentBtn = document.createElement("button");
+            deleteCommentBtn.textContent = "×";
+            deleteCommentBtn.className = "comment-delete-btn";
+            deleteCommentBtn.addEventListener("click", (e) => {
+                e.stopPropagation();
+                socket.emit("delete_comment", { taskId, commentIndex: Array.from(commentsDiv.children).indexOf(commentDiv) });
+            });
+    
+            commentDiv.appendChild(commentP);
+            commentDiv.appendChild(deleteCommentBtn);
+
+            commentsDiv.appendChild(commentDiv);
+        }
+    }
+});
+
+socket.on("comment_deleted", ({ taskId, commentIndex }) => {
+    const taskElement = document.querySelector(`[data-task-id="${taskId}"]`);
+    if (taskElement) {
+        const commentsDiv = taskElement.querySelector(".comments");
+        if (commentsDiv) {
+            const commentItems = commentsDiv.querySelectorAll(".comment-item");
+            if (commentItems[commentIndex]) {
+                commentItems[commentIndex].remove();
+            }
         }
     }
 });

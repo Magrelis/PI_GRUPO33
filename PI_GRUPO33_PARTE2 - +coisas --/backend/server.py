@@ -37,6 +37,15 @@ def create_task(sid, task_data):
     notify_slack(f"✅ Nova tarefa: {new_task['title']}")  # Notificação no Slack
 
 @sio.event
+def delete_comment(sid, data):
+    task_id = data["taskId"]
+    comment_index = data["commentIndex"]
+    task = next((t for t in tasks if t["id"] == task_id), None)
+    if task and 0 <= comment_index < len(task.get("comments", [])):
+        deleted_comment = task["comments"].pop(comment_index)
+        sio.emit("comment_deleted", {"taskId": task_id, "commentIndex": comment_index})
+
+@sio.event
 def delete_task(sid, task_id):
     global tasks
     task_index = next((i for i, t in enumerate(tasks) if t["id"] == task_id), None)
